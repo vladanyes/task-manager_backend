@@ -29,6 +29,24 @@ router.post('/users/login', async (req, res) => {
   }
 });
 
+router.post('/users/logout', auth, async (req, res) => {
+  try {
+    if (req.query.type === 'all') {
+      req.user.tokens = []
+    } else {
+      req.user.tokens = req.user.tokens.filter(tokenObj => {
+        return tokenObj.token !== req.token;
+      });
+    }
+
+    await req.user.save();
+
+    res.status(200).send("Logged out successfully");
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
 router.get('/users/me', auth, async (req, res) => {
   res.send(req.user);
 });
