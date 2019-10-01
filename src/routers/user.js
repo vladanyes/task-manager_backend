@@ -47,28 +47,54 @@ router.post('/users/logout', auth, async (req, res) => {
   }
 });
 
+// @todo Create admin role for fetching users by id.
+// router.get('/users/:id', auth, async (req, res) => {
+//   const _id = req.params.id;
+//
+//   try {
+//     const user = await User.findById(_id);
+//
+//     if (!user) {
+//       return res.status(404).send();
+//     }
+//
+//     res.send(user);
+//   } catch (e) {
+//     res.status(500).send(e);
+//   }
+// });
+
 router.get('/users/me', auth, async (req, res) => {
   res.send(req.user);
 });
 
-router.get('/users/:id', auth, async (req, res) => {
-  const _id = req.params.id;
+// @todo Create admin role for updating users by id.
+// router.patch('/users/:id', auth, async (req, res) => {
+//   const { params, body } = req;
+//   const validUpdateFields = ['name', 'email', 'age', 'password'];
+//   const updateFields = Object.keys(req.body);
+//   const isValidUpdate = updateFields.every(updField => validUpdateFields.includes(updField));
+//
+//   if (!isValidUpdate) return res.status(400).send({ error: 'Invalid field update' });
+//
+//   try {
+//     // we dont use findByIdAndUpdate, because want to use middleware pre 'save'
+//     const user = await User.findById(params.id);
+//     updateFields.forEach(field => user[field] = body[field]);
+//
+//     await user.save();
+//
+//     if (!user) {
+//       return res.status(404).send();
+//     }
+//
+//     res.send(user);
+//   } catch (e) {
+//     res.status(500).send(e);
+//   }
+// });
 
-  try {
-    const user = await User.findById(_id);
-
-    if (!user) {
-      return res.status(404).send();
-    }
-
-    res.send(user);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
-router.patch('/users/:id', auth, async (req, res) => {
-  const { params, body } = req;
+router.patch('/users/me', auth, async (req, res) => {
   const validUpdateFields = ['name', 'email', 'age', 'password'];
   const updateFields = Object.keys(req.body);
   const isValidUpdate = updateFields.every(updField => validUpdateFields.includes(updField));
@@ -76,31 +102,35 @@ router.patch('/users/:id', auth, async (req, res) => {
   if (!isValidUpdate) return res.status(400).send({ error: 'Invalid field update' });
 
   try {
-    // we dont use findByIdAndUpdate, because want to use middleware pre 'save'
-    const user = await User.findById(params.id);
-    updateFields.forEach(field => user[field] = body[field]);
+    updateFields.forEach(field => req.user[field] = req.body[field]);
 
-    await user.save();
+    await req.user.save();
 
-    if (!user) {
-      return res.status(404).send();
-    }
-
-    res.send(user);
+    res.send(req.user);
   } catch (e) {
     res.status(500).send(e);
   }
 });
 
-router.delete('/users/:id', auth, async (req, res) => {
+// @todo Create admin role for deleting users by id.
+// router.delete('/users/:id', auth, async (req, res) => {
+//   try {
+//     const user = await User.findByIdAndDelete(req.params.id);
+//
+//     if (!user) {
+//       return res.status(404).send();
+//     }
+//
+//     res.send(user);
+//   } catch (e) {
+//     res.status(500).send(e);
+//   }
+// });
+
+router.delete('/users/me', auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) {
-      return res.status(404).send();
-    }
-
-    res.send(user);
+    await req.user.remove(); // req.user is available because we defined it in user schema
+    res.send(req.user);
   } catch (e) {
     res.status(500).send(e);
   }
