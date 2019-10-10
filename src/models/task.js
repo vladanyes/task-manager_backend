@@ -9,6 +9,12 @@ const taskSchema = new mongoose.Schema({
   completed: {
     type: Boolean,
     default: false
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User' // Pointing relationships from task to the user model.
+    // It can be accessible by await task.populate('owner').execPopulate();
   }
 });
 

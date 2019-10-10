@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Task = require('./task');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema({
       message: 'Too simple password'
     }
   },
+  // saving all tokens from all devices that be logged in
   tokens: [
     {
       token: {
@@ -47,6 +49,15 @@ const userSchema = new mongoose.Schema({
   ]
 });
 
+// Using mongoose virtuals, you can define more sophisticated relationships between documents(i.e. user and task)
+// It can be accessible via await user.populate('tasks').execPopulate(); user.tasks;
+userSchema.virtual('tasks', {
+  ref: 'Task', // The model to use/reference
+  localField: '_id', // Find user where `localField`
+  foreignField: 'owner' // is equal to `foreignField`
+});
+
+// Customizing toJSON method, which will be called automatically for object in res.send(Obj)
 userSchema.methods.toJSON = function() {
   const user = this; 
   const userObj = user.toObject(); 
@@ -82,7 +93,7 @@ userSchema.statics.findByCredentials = async function(email, password) {
 
 };
 
-// Hashing password before saving for better secure
+// Hash password before saving for better secure
 userSchema.pre('save', async function(next) {
   const user = this;
 
@@ -90,6 +101,14 @@ userSchema.pre('save', async function(next) {
     user.password = await bcrypt.hash(user.password, 8);
   }
 
+  next();
+});
+
+// Delete user tasks when user is removed
+userSchema.pre('remove', async function(next) {
+  const user = this;
+
+  await Task.deleteMany({ owner: user._id });
   next();
 });
 
